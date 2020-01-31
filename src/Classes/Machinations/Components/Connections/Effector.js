@@ -1,9 +1,27 @@
 const Connector = require('./Connector').Connector;
 
 class Effector extends Connector{
-    constructor(from, to, amount = 1, id = "empty"){
-        super(from, to, id);
-        this.amount = amount;
+    constructor(from, to, amount = 1, id = "empty", index, label){
+        super(from, to, id, index);
+        if(label){
+            let c = label.charAt(0);
+            if(c == '+' || c == '-'){
+                let splitByStar = label.split(c);
+                splitByStar = splitByStar[1].split("m");
+                if(splitByStar.length > 1){
+                    // if it had m
+                    this.mamount = splitByStar[0];
+                }
+                else{
+                    this.amount = splitByStar[0];
+                    this.mamount = 0;
+                }
+            }
+        }
+        else{
+            this.amount = amount;
+            this.mamount = 0;
+        }
         this.isTransferer = false;
         this.activator = 0;
 
@@ -18,8 +36,7 @@ class Effector extends Connector{
     }
 
     activate(delta){
-        console.log("effecting by transferer");
-        this.to.effect(this.amount * delta);
+        this.to.effect(this.amount * delta, this.mamount);
     }
 
     effect(amount){

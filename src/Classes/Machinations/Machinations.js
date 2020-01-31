@@ -3,8 +3,11 @@
     
     An implementation of machinations for node servers
 */
+const Node = require('./Components/Nodes/Node').Node;
 const Pool = require('./Components/Nodes/Pool').Pool;
 const Source = require('./Components/Nodes/Source').Source;
+const Drain = require('./Components/Nodes/Drain').Drain;
+const Converter = require('./Components/Nodes/Converter').Converter;
 
 const Transferer = require('./Components/Connections/Transferer').Transferer;
 const Effector = require('./Components/Connections/Effector').Effector;
@@ -12,50 +15,81 @@ const Effector = require('./Components/Connections/Effector').Effector;
 const Modes = require('./Components/Nodes/Modes');
 
 class Machinations{
-    constructor(Nodes, Connections, Game){
+    constructor(designObj, Game){
         // machinations constructor
-        this.Nodes = Nodes;
-        this.Connections = Connections;
-        this.Game = Game;
 
-        Nodes.forEach(node => {
-            switch(node.type){
-                case Modes.NodeType.Source:
-                    node.n = new Source(node.id);
-                    break;
-                case Modes.NodeType.Pool:
-                    node.n = new Pool(node.id);
-                    break;
+        this.Nodes = [];
+        this.Connections = [];
+
+        let index = 0;
+        designObj.children.forEach(child => {
+            if(child.name == "node"){
+                child.attributes.index = index++;
+                child.attributes.id = child.attributes.caption;
+                this.Nodes.push(child.attributes);
+            }
+            else{
+                child.attributes.index = index++;
+                this.Connections.push(child.attributes);
             }
         });
 
-        Connections.forEach(c => {
-            if(c.tr){
+        this.Game = Game;
+
+        this.Nodes.forEach(node => {
+            switch(node.symbol){
+                case Modes.NodeType.Source:
+                    node.n = new Source(node.caption, node.index, node.activationMode);
+                    break;
+                case Modes.NodeType.Pool:
+                    node.n = new Pool(node.caption, node.index, node.activationMode, parseInt(node.startingResources));
+                    break;
+                case Modes.NodeType.Drain:
+                    node.n = new Drain(node.caption, node.index, node.activationMode);
+                    break;
+                case Modes.NodeType.Converter:
+                    node.n = new Converter(node.caption, node.index, node.activationMode);
+                    break;
+                default:
+                    node.n = new Node(node.caption, node.index, node.activationMode);
+            }
+        });
+
+        this.Connections.forEach(c => {
+            if(c.type == Modes.Conncetions.Resource){
                 // TODO: detect if the node id doesn't exist in nodes
-                let from_ = Nodes.filter(n => n.id == c.from)[0].n;
+                c.start = parseInt(c.start);
+                c.end = parseInt(c.end);
+
+                let from_ = this.Nodes.filter(n => {return n.n.index == c.start;})[0].n;
+                let to_ = this.Nodes.filter(n => {return n.n.index == c.end;})[0];
+                to_ = to_.n;
 
                 c.c = new Transferer(
                     from_,
-                    Nodes.filter(n => n.id == c.to)[0].n,
+                    to_,
                     c.amount,
-                    c.id
+                    c.id,
+                    c.index,
+                    c.label
                 )
                 
                 from_.addConnection(c.c);
+                to_.addOutGoingConnection(c.c);
             }
         });
 
-        Connections.forEach(c => {
-            if(!c.tr){
+        this.Connections.forEach(c => {
+            if(c.type == Modes.Conncetions.State){
                 // TODO: detect if the node id doesn't exist in nodes                
-                let from_ = Nodes.filter(n => n.id == c.from)[0].n;
+                let from_ = this.Nodes.filter(n => n.n.index == c.start)[0].n;
+                let to_ = this.Nodes.filter(n => n.n.index == c.end);
 
-                let to_ = Nodes.filter(n => n.id == c.to)[0];
-                if(to_){
-                    to_ = to_[0];
+                if(to_.length > 0){
+                    to_ = to_[0].n;
                 }
                 else{
-                    to_ = Connections.filter(cc => cc.id == c.to)[0].c;
+                    to_ = this.Connections.filter(cc => cc.id == c.to)[0].c;
                 }
 
                 c.c = new Effector(
@@ -63,6 +97,8 @@ class Machinations{
                     to_,
                     c.amount,
                     c.id,
+                    c.index,
+                    c.label
                 )
 
                 from_.addConnection(c.c);
@@ -79,13 +115,21 @@ class Machinations{
     }
 
     update(){
+        let pools = [];
+
         this.Nodes.forEach(node => {
             if(node.n.nmode == Modes.NodeModes.auto){
                 node.n.activate();
             }
+            if(node.symbol == "Pool"){
+                pools.push({
+                    id: node.n.id,
+                    amount: node.n.amount
+                });
+            }
         });
 
-        this.Game.update();
+        this.Game.update(pools);
     }
 }
 

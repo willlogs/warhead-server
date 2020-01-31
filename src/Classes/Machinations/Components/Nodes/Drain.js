@@ -1,8 +1,8 @@
 const Node = require('./Node').Node;
 const Modes = require('./Modes');
 
-class Pool extends Node{
-    constructor(id, index, nMode, amount){
+class Drain extends Node{
+    constructor(id, index, nMode){
         super(id, index);
         if(nMode == "automatic"){
             this.nmode = Modes.NodeModes.auto;
@@ -10,21 +10,19 @@ class Pool extends Node{
         else{
             this.nmode = Modes.NodeModes.passive;
         }
-        this.ppmode = Modes.PushPullMode.push;
+        this.ppmode = Modes.PushPullMode.pull;
         this.enabled = true;
-
-        this.amount = amount;
 
         this.init();
     }
 
-    effectEvent(delta){
-        this.connections.forEach(c => {
-            if(!c.isTransferer){
-                c.activate(delta);
-            }
-        })
+    reverseActivation(){
+
+    }
+
+    effect(amount){
+        //nothing!
     }
 }
 
-module.exports = { Pool };
+module.exports = { Drain };

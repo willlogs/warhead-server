@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/mamatosen/warhead-server/issues"
   },
-  "homepage": "https://github.com/mamatosen/warhead-server#readme"
+  "homepage": "https://github.com/mamatosen/warhead-server#readme",
+  "dependencies": {
+    "xml-reader": "^2.4.3",
+    "xml2js": "^0.4.23"
+  }
 }

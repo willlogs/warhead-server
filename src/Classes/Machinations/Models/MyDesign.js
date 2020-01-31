@@ -14,7 +14,10 @@ const Nodes = [
         id: "source1",
         type: Modes.NodeType.Source,
     },
-
+    {
+        id: "drain1",
+        type: Modes.NodeType.Drain,
+    },
 ];
 
 const Connections = [
@@ -31,6 +34,13 @@ const Connections = [
         id: "tr1",
         to: "pool2",
         from: "source1",
+    },
+    {
+        tr: true,
+        amount: 1,
+        id: "tr2",
+        to: "drain1",
+        from: "pool2",
     },
     {
         tr: false,

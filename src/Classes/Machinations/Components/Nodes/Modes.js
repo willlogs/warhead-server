@@ -17,8 +17,15 @@ const PushPullMode = {
 const Sequence = 1;
 
 const NodeType = {
-    Source: 0,
-    Pool: 1,
+    Source: "Source",
+    Pool: "Pool",
+    Drain : "Drain",
+    Converter : "Converter",
+}
+
+const Conncetions = {
+    Resource: "Resource Connection",
+    State: "State Connection",
 }
 
 module.exports = {
@@ -27,4 +34,5 @@ module.exports = {
     PushPullMode,
     Sequence,
     NodeType,
+    Conncetions,
 };

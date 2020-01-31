@@ -1,9 +1,15 @@
 const cnslcolors = require('../../../terminalColors').Colors;
-const designObj = require('../Machinations/Models/MyDesign');
+const designObj = require('../../../utils/design.json');
 const Machinations = require('../Machinations/Machinations').Machinations;
 const Modes = require('../Machinations/Components/Nodes/Modes');
 
+const fs = require('fs');
+const xml = require('xml-reader');
+
+const reader = xml.create();
+
 let GamesCount = 0;
+let gameMade = false;
 
 class Game{
     constructor(connections){
@@ -14,22 +20,20 @@ class Game{
             c.isInGame = true;
         });
 
-        this.Mach = new Machinations(designObj.Nodes, designObj.Connections, this);
+        reader.on('done', (data) => {
+            // do whatever with the data
+            this.Mach = new Machinations(data, this);
+            gameMade = true;
+        });
+
+        fs.readFile(__dirname + '/../../../utils/design.xml', 'utf8',function(err, data) {
+            reader.parse(data);
+        });
 
         console.log(cnslcolors.FgYellow + "> Game created for 2" + cnslcolors.FgWhite);
     }
 
-    update(){
-        let pools = [];
-        this.Mach.Nodes.forEach(node => {
-            if(node.type == Modes.NodeType.Pool){
-                pools.push({
-                    id: node.id,
-                    amount: node.n.amount,
-                });
-            }
-        });
-        
+    update(pools){
         console.log(pools);
     }
 }
